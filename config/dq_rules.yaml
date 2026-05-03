@@ -1,0 +1,63 @@
+dq_rules:
+
+  - field: account_id
+    source: accounts
+    op: is_null
+    dq_flag: NULL_REQUIRED
+    handling: QUARANTINED
+
+  - field: transaction_id
+    source: transactions
+    op: is_duplicate
+    dq_flag: DUPLICATE_DEDUPED
+    handling: FLAG
+
+  - field: account_id
+    source: transactions
+    op: orphaned_reference
+    dq_flag: ORPHANED_ACCOUNT
+    handling: FLAG
+
+  - field: amount
+    source: transactions
+    op: type_cast_failed
+    dq_flag: TYPE_MISMATCH
+    handling: NORMALISED
+
+  - field: transaction_date
+    source: transactions
+    op: date_parse_failed
+    dq_flag: DATE_FORMAT
+    handling: NORMALISED
+
+  - field: currency
+    source: transactions
+    op: not_in
+    value: [ZAR, R, rands, 710, zar, Rand]
+    dq_flag: CURRENCY_VARIANT
+    handling: NORMALISED
+
+
+domain_constraints:
+  transaction_type:
+    allowed: [DEBIT, CREDIT, FEE, REVERSAL]
+  channel:
+    allowed: [POS, APP, ATM, EFT, USSD, INTERNAL]
+  account_type:
+    allowed: [SAVINGS, TRANSACTIONAL, CREDIT]
+  account_status:
+    allowed: [ACTIVE, DORMANT, CLOSED, SUSPENDED]
+  gender:
+    allowed: [M, F, NB, UNKNOWN]
+  kyc_status:
+    allowed: [VERIFIED, PENDING, FAILED]
+
+
+currency_normalisation:
+  ZAR:
+    - ZAR
+    - R
+    - rands
+    - 710
+    - zar
+    - Rand
